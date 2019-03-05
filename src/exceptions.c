@@ -43,7 +43,7 @@ void destroy_condition(struct condition *condition) {
 }
 
 void fprint_condition(FILE* file, struct condition *cond) {
-	fprintf(file, "condition: %s @ %s:%d",cond->name, cond->filename, cond->linenum);
+	fprintf(file, "condition: %s:%s @ %s:%d",cond->name, cond->message, cond->filename, cond->linenum);
 }
 
 void print_condition(struct condition *condition) {
