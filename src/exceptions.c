@@ -43,7 +43,7 @@ void destroy_condition(struct condition *condition) {
 }
 
 void fprint_condition(FILE* file, struct condition *cond) {
-	fprintf(file, "condition: %s:%s @ %s:%d",cond->name, cond->message, cond->filename, cond->linenum);
+	fprintf(file, "%s:%d: %s:%s",cond->filename, cond->linenum, cond->name, cond->message);
 }
 
 void print_condition(struct condition *condition) {
@@ -136,6 +136,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		switch(result) {
 		case HANDLER_ABORT:
             // TODO: implement finalizers
+			destroy_condition(cond);
 			longjmp(canidate->handler->buf, 1);
 		case HANDLER_HANDLED:
 			destroy_condition(cond);
