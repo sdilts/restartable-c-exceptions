@@ -118,7 +118,7 @@ enum restart_result invoke_restart(struct condition *cond, char *restart_name) {
 	}
 }
 
-struct handler_entry *find_handler_entry(struct handler_entry *head, char *condition_name) {
+static struct handler_entry *find_handler_entry(struct handler_entry *head, char *condition_name) {
 	struct handler_entry *entry = head;
 	for( ; entry != NULL; entry = entry->next) {
 		if(entry->tag == HANDLER && strcmp(entry->handler->condition_name, condition_name) == 0) {
