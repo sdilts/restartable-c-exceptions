@@ -60,7 +60,7 @@ struct condition_handler {
 	const void *data;
 };
 
-#define INIT_HANDLER(to_handle, function, _data)	\
+#define INIT_STATIC_HANDLER(to_handle, function, _data)	\
 	{ .condition_name = to_handle, .func = function, .data = _data }
 
 // register the given condition handler. If the handler decides to
