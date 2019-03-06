@@ -41,16 +41,13 @@ typedef enum restart_result (*restart_func)(struct condition* cond, const void *
 
 typedef enum handler_result (*handler_func)(struct condition* cond, const void *data);
 
+typedef void (*finalizer_func)(const void *data);
+
 struct condition_restart {
 	const char* restart_name;
 	const restart_func func;
 	const void *data;
 };
-
-// adds the given restart as a valid restart:
-void register_restart(struct condition_restart *restart);
-
-void unregister_restart(struct condition_restart *restart);
 
 struct condition_handler {
 	// the name of the condition that this handler handles:
@@ -59,6 +56,16 @@ struct condition_handler {
 	jmp_buf buf;
 	const void *data;
 };
+
+struct condition_finalizer {
+	const finalizer_func func;
+	void *data;
+};
+
+// adds the given restart as a valid restart:
+void register_restart(struct condition_restart *restart);
+
+void unregister_restart(struct condition_restart *restart);
 
 #define INIT_STATIC_HANDLER(to_handle, function, _data)	\
 	{ .condition_name = to_handle, .func = function, .data = _data }
@@ -85,5 +92,16 @@ void _throw_exception(char* name, char *message, const char *filename, const int
 
 #define warn(message) \
 	_throw_exception("warning", message, __FILE__, __LINE__)
+
+/**
+ * A finalizer will always be run, even when the function is exited via a condition.
+ * The finalizer is ran when it is unregistered with unregister_finalizer.
+ **/
+void register_finalizer(struct condition_finalizer *finalizer);
+
+void unregister_finalizer(struct condition_finalizer *finalizer);
+
+#define INIT_STATIC_FINALIZER(_func, _data) \
+	{ .func = _func, .data = _data }
 
 #endif

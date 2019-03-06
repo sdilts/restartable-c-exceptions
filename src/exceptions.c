@@ -7,8 +7,13 @@
 #include <exceptions.h>
 
 // represents one element in the handler stack:
+enum handler_entry_contents { HANDLER, FINALIZER };
 struct handler_entry {
-	struct condition_handler *handler;
+	enum handler_entry_contents tag;
+	union {
+		struct condition_handler *handler;
+		struct condition_finalizer *finalizer;
+	};
 	struct handler_entry *next;
 };
 
@@ -73,6 +78,7 @@ void unregister_restart(struct condition_restart *restart) {
 
 void _register_handler(struct condition_handler *handler) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
+	entry->tag = HANDLER;
 	entry->handler = handler;
 	entry->next = NULL;
 	LL_PREPEND(handlers, entry);
@@ -81,11 +87,11 @@ void _register_handler(struct condition_handler *handler) {
 void unregister_handler(struct condition_handler *handler) {
 	struct handler_entry *entry = handlers;
 	for( ; entry != NULL; entry = entry->next) {
-		if(entry->handler == handler) {
+		if(entry->tag == HANDLER && entry->handler == handler) {
 			break;
 		}
 	}
-	if(entry) {
+	if(entry && entry->tag == HANDLER) {
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
@@ -115,11 +121,56 @@ enum restart_result invoke_restart(struct condition *cond, char *restart_name) {
 struct handler_entry *find_handler_entry(struct handler_entry *head, char *condition_name) {
 	struct handler_entry *entry = head;
 	for( ; entry != NULL; entry = entry->next) {
-		if(strcmp(entry->handler->condition_name, condition_name) == 0) {
+		if(entry->tag == HANDLER && strcmp(entry->handler->condition_name, condition_name) == 0) {
 			return entry;
 		}
 	}
-	return entry;
+	if (entry && entry->tag == HANDLER) {
+		return entry;
+	} else {
+		return NULL;
+	}
+}
+
+void register_finalizer(struct condition_finalizer *finalizer) {
+	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
+	entry->tag = FINALIZER;
+	entry->finalizer = finalizer;
+	entry->next = NULL;
+	LL_PREPEND(handlers, entry);
+}
+
+void unregister_finalizer(struct condition_finalizer *finalizer) {
+	struct handler_entry *entry = handlers;
+	// run the finalizer:
+	finalizer->func(finalizer->data);
+
+	for( ; entry != NULL; entry = entry->next) {
+		if(entry->tag == FINALIZER && entry->finalizer == finalizer) {
+			break;
+		}
+	}
+	if(entry && entry->tag == FINALIZER) {
+		LL_DELETE(handlers, entry);
+		free(entry);
+	} else {
+		fprintf(stderr, "Trying to unregister non-existent handler");
+	}
+}
+
+static void run_finalizers_and_unwind(struct handler_entry *entry) {
+	struct handler_entry *current;
+	struct handler_entry *tmp;
+	LL_FOREACH_SAFE(handlers, current, tmp) {
+		if(current == entry) {
+			break;
+		}
+		if(current->tag == FINALIZER) {
+			current->finalizer->func(current->finalizer->data);
+		}
+		LL_DELETE(handlers, current);
+		free(current);
+	}
 }
 
 void _throw_exception(char *name, char *message, const char *filename, const int linenum) {
@@ -135,7 +186,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
 		case HANDLER_ABORT:
-            // TODO: implement finalizers
+			run_finalizers_and_unwind(canidate);
 			destroy_condition(cond);
 			longjmp(canidate->handler->buf, 1);
 		case HANDLER_HANDLED:
