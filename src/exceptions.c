@@ -126,11 +126,11 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 	struct condition *cond = create_condition(name, message, filename, linenum);
 	// search for a handler:
 	struct handler_entry *canidate = handlers;
-	enum handler_result result = HANDLER_ABORT;
+	enum handler_result result;
 	while(canidate != NULL) {
 		canidate = find_handler_entry(canidate, name);
 		if (canidate == NULL) {
-			goto none_found;
+			break;
 		}
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
@@ -149,7 +149,6 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 			exit(1);
 		}
 	}
- none_found:
 	// if we get here, it means we didn't find a handler:
 	fprintf(stderr, "Fatal condition: ");
 	fprint_condition(stderr, cond);
