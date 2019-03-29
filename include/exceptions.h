@@ -36,7 +36,6 @@ void print_condition(struct condition *condition);
 
 void destroy_condition(struct condition *condition);
 
-// if a restart func returns true, it means that the condition was successfully handled
 typedef enum restart_result (*restart_func)(struct condition* cond, const void *data);
 
 typedef enum handler_result (*handler_func)(struct condition* cond, const void *data);
