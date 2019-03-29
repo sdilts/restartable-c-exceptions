@@ -62,6 +62,9 @@ struct condition_finalizer {
 	void *data;
 };
 
+#define INIT_STATIC_RESTART(name, function, _data) \
+	{ .restart_name = name, .func = function, .data = data }
+
 // adds the given restart as a valid restart:
 void register_restart(struct condition_restart *restart);
 
