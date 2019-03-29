@@ -23,9 +23,17 @@ struct restart_entry {
 	struct restart_entry *next;
 };
 
+/**
+ * a stack that contains finalizers and handlers available
+ * in the current context.
+ **/
 static thread_local struct handler_entry *handlers = NULL;
 
+/**
+ * a stack that contains the restarts available in the current context
+ **/
 static thread_local struct restart_entry *restarts = NULL;
+
 static struct condition *create_condition(char* name, char *message,
 										const char *filename, const int linenum) {
 	struct condition *condition = malloc(sizeof(struct condition));
@@ -55,6 +63,11 @@ void fprint_condition(FILE* file, struct condition *cond) {
 void print_condition(struct condition *condition) {
 	fprint_condition(stdout, condition);
 }
+
+/*
+ * The register and unregister functions simply add or remove
+ * the relevlent items to their stack.
+ */
 
 void register_restart(struct condition_restart *restart)  {
 	struct restart_entry *entry = malloc(sizeof(struct restart_entry));
@@ -155,10 +168,15 @@ void unregister_finalizer(struct condition_finalizer *finalizer) {
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
-		fprintf(stderr, "Trying to unregister non-existent handler");
+		fprintf(stderr, "Trying to unregister non-existent finalizer");
 	}
 }
 
+/**
+ * Runs the finalizers downto the given handler_entry
+ * Removes the handler_entrys in between, as they will no longer be valid
+ * after the jump is executed.
+ **/
 static void run_finalizers_and_unwind(struct handler_entry *entry) {
 	struct handler_entry *current;
 	struct handler_entry *tmp;
@@ -180,9 +198,10 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 	struct handler_entry *canidate = handlers;
 	enum handler_result result;
 	while(canidate != NULL) {
+		// find the next valid handler in the list:
 		canidate = find_handler_entry(canidate, name);
 		if (canidate == NULL) {
-			break;
+			break; // while
 		}
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
@@ -194,8 +213,9 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 			destroy_condition(cond);
 			return;
 		case HANDLER_PASS:
+			// skip this handler:
 			canidate = canidate->next;
-			break;
+			break; //switch
 		default:
 			fprintf(stderr, "Invalid handler option: %d", result);
 			exit(1);
