@@ -31,6 +31,9 @@ this problem in code that has access to them. To this end, any
 function that is used as a callback to an external library should
 establish handlers for any error that may be signaled during its execution.
 
+Because `setjmp`/`longjmp` are being used, variable-modified types
+like VLAs will cause undefined behavior and memory leaks.
+
 ## Usage
 A complete description of each function and macro is available in
 `include/exceptions.h` file.
@@ -153,7 +156,8 @@ idea to declare pointers in your environment struct as
 constant. Along the same lines, declaring variables passed in
 this manner as `volatile` prevents the compiler from making any
 assumptions about the value of the variable and causing hard to
-track down issues.
+track down issues. If you don't modify the variable in the handler
+function, the variable doesn't need to be declared `volatile`.
 
 The `data` member in the `condition_handler` struct stores the pointer
 to this data. If you are using the `INIT_STATIC_HANDLER` macro, this
