@@ -45,9 +45,26 @@ struct private_cond  {
 static struct condition *create_condition(char* name, char *message,
 										const char *filename, const int linenum) {
 	struct private_cond *condition = malloc(sizeof(struct private_cond));
+	if(!condition) {
+		fprintf(stderr, "Unable to allocate condition\n");
+		exit(1);
+	}
 	condition->name = malloc(strlen(name)+1);
+	if(!condition->name) {
+		fprintf(stderr, "Unable to allocate condition\n");
+		exit(1);
+	}
 	condition->message = malloc(strlen(message)+1);
+	if(!condition->message) {
+		fprintf(stderr, "Unable to allocate condition\n");
+		exit(1);
+	}
 	condition->filename = malloc(strlen(filename)+1);
+	if(!condition->filename) {
+		fprintf(stderr, "Unable to allocate condition\n");
+		exit(1);
+	}
+
 	strcpy(condition->name, name);
 	strcpy(condition->message, message);
 	// we might not need to do this, as filename /should/ be a static string
@@ -80,6 +97,10 @@ void print_condition(struct condition *condition) {
 
 void register_restart(struct condition_restart *restart)  {
 	struct restart_entry *entry = malloc(sizeof(struct restart_entry));
+	if(!entry) {
+		fprintf(stderr, "Unable allocate restart entry\n");
+		exit(1);
+	}
 	entry->restart = restart;
 	entry->next = NULL;
 	LL_PREPEND(restarts, entry);
@@ -101,6 +122,10 @@ void unregister_restart(struct condition_restart *restart) {
 
 void _register_handler(struct condition_handler *handler) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
+	if(!entry) {
+		fprintf(stderr, "Unable allocate handler entry\n");
+		exit(1);
+	}
 	entry->tag = HANDLER;
 	entry->handler = handler;
 	entry->next = NULL;
@@ -118,7 +143,7 @@ void unregister_handler(struct condition_handler *handler) {
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
-		fprintf(stderr, "Trying to unregister non-existent handler");
+		fprintf(stderr, "Trying to unregister non-existent handler\n");
 	}
 }
 
@@ -157,6 +182,10 @@ static struct handler_entry *find_handler_entry(struct handler_entry *head, char
 
 void register_finalizer(struct condition_finalizer *finalizer) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
+	if(!entry) {
+		fprintf(stderr, "Unable allocate handler entry\n");
+		exit((1);
+	}
 	entry->tag = FINALIZER;
 	entry->finalizer = finalizer;
 	entry->next = NULL;
@@ -175,7 +204,7 @@ static void unregister_finalizer_no_cleanup(struct condition_finalizer *finalize
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
-		fprintf(stderr, "Trying to unregister non-existent finalizer");
+		fprintf(stderr, "Trying to unregister non-existent finalizer\n");
 	}
 }
 
@@ -246,7 +275,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 			canidate = canidate->next;
 			break; //switch
 		default:
-			fprintf(stderr, "Invalid handler option: %d", result);
+			fprintf(stderr, "Invalid handler option: %d\n", result);
 			exit(1);
 		}
 	}
