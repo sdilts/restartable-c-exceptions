@@ -141,12 +141,14 @@ int main(void) {
 	struct env_data data = {
 		.a = &a
 	};
-	print_env(data);
-	modify_env(data);
+	print_env((void *)data);
+	modify_env((void *)data);
 	printf("a = %d\n", a);
 }
 ```
-Run this, and you will get the output
+The output of this program should be fairly obvious to most c
+programmers, but is worth noting in the context of lambda
+functions. The output is:
 ```
 a = 2
 a = 30
