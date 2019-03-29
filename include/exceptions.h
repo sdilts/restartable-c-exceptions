@@ -54,6 +54,11 @@ struct condition_handler {
 	const handler_func func;
 	jmp_buf buf;
 	void *const data;
+	// when the handler function returns HANDLER_ABORT, this
+	// field is populated by the condition that caused the error.
+	// the handling code is responsible for freeing it by calling
+	// destroy_condition on it.
+	struct condition *condition;
 };
 
 struct condition_finalizer {

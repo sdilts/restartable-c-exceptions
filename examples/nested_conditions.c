@@ -36,16 +36,18 @@ int main(void) {
 	struct condition_handler aborter = INIT_STATIC_HANDLER("something", abort_handler, NULL);
 	REGISTER_HANDLER(&aborter) {
 		printf("Abort handler has aborted\n");
+		destroy_condition(aborter.condition);
 		goto aborter_scope;
 	}
 
 	struct condition_handler something = INIT_STATIC_HANDLER("something", handle_something, &data);
 	REGISTER_HANDLER(&something) {
+		destroy_condition(something.condition);
 		goto something_scope;
 	}
 	struct condition_handler pass = INIT_STATIC_HANDLER("something", pass_handle, NULL);
 	REGISTER_HANDLER(&pass) {
-		printf("Pass handler aborted!");
+		destroy_condition(pass.condition);
 		goto pass_scope;
 	}
 	struct condition_finalizer finalizer = INIT_STATIC_FINALIZER(finalize, NULL);

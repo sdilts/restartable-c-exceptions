@@ -163,10 +163,8 @@ void register_finalizer(struct condition_finalizer *finalizer) {
 	LL_PREPEND(handlers, entry);
 }
 
-void unregister_finalizer(struct condition_finalizer *finalizer) {
+static void unregister_finalizer_no_cleanup(struct condition_finalizer *finalizer) {
 	struct handler_entry *entry = handlers;
-	// run the finalizer:
-	finalizer->func(finalizer->data);
 
 	for( ; entry != NULL; entry = entry->next) {
 		if(entry->tag == FINALIZER && entry->finalizer == finalizer) {
@@ -179,6 +177,12 @@ void unregister_finalizer(struct condition_finalizer *finalizer) {
 	} else {
 		fprintf(stderr, "Trying to unregister non-existent finalizer");
 	}
+}
+
+void unregister_finalizer(struct condition_finalizer *finalizer) {
+	// run the finalizer:
+	finalizer->func(finalizer->data);
+	unregister_finalizer_no_cleanup(finalizer);
 }
 
 /**
@@ -228,7 +232,10 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
 		case HANDLER_ABORT:
-			// the condition finalizer is ran here, so no need to destroy it.
+			// setup the context for the handler:
+			unregister_finalizer_no_cleanup(&cond_finalizer);
+			canidate->handler->condition = cond;
+			// unwind the stack and run the finalizers:
 			run_finalizers_and_unwind(canidate);
 			longjmp(canidate->handler->buf, 1);
 		case HANDLER_HANDLED:
