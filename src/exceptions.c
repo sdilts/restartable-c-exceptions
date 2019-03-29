@@ -201,14 +201,19 @@ static void run_finalizers_and_unwind(struct handler_entry *entry) {
 	}
 }
 
-static void condition_finalizer(void *data) {
-	struct condition *cond = (struct condtion *)data;
-	destroy_condition(cond);
+struct throw_env {
+	struct condition *const condition;
+};
+
+static void condition_finalizer(const void *data) {
+	const struct throw_env *env = (const struct throw_env *)data;
+	destroy_condition(env->condition);
 }
 
 void _throw_exception(char *name, char *message, const char *filename, const int linenum) {
 	struct condition *cond = create_condition(name, message, filename, linenum);
-	struct condition_finalizer cond_finalizer = INIT_STATIC_FINALIZER(condition_finalizer, cond);
+	struct throw_env env = { .condition = cond };
+	struct condition_finalizer cond_finalizer = INIT_STATIC_FINALIZER(&condition_finalizer, &env);
 	register_finalizer(&cond_finalizer);
 
 	// search for a handler:

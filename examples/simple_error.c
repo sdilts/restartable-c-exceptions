@@ -19,4 +19,5 @@ int main(void) {
 	// unregister the handler:
  handler_scope:
 	unregister_handler(&aborter);
+	return 0;
 }
