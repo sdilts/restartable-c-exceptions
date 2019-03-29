@@ -6,16 +6,16 @@ struct func_data {
 	volatile int *a;
 };
 
-enum handler_result handle_something(struct condition* cond, const void *context) {
+enum handler_result handle_something(struct condition *cond, const void *context) {
 	const struct func_data *data = (const struct func_data *) context;
-	printf("I'm handling condition ");
+	printf("I'm handling condition\n");
 	print_condition(cond);
 	printf("\nMy data is: %d\n", *data->a);
 	*data->a = 10;
 	return HANDLER_HANDLED;
 }
 
-enum handler_result pass_handle(struct condition* cond, const void *data) {
+enum handler_result pass_handle(struct condition *cond, const void *data) {
 	printf("I'll pass, thanks\n");
 	return HANDLER_PASS;
 }
@@ -62,7 +62,7 @@ int main(void) {
  something_scope:
 	unregister_handler(&something);
 
-	throw("something", "Throwing because I won't shut up!");
+	throw("something", "This is a message!");
 
  aborter_scope:
 	unregister_handler(&aborter);
