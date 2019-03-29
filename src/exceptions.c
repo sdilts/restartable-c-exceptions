@@ -192,8 +192,16 @@ static void run_finalizers_and_unwind(struct handler_entry *entry) {
 	}
 }
 
+static void condition_finalizer(void *data) {
+	struct condition *cond = (struct condtion *)data;
+	destroy_condition(cond);
+}
+
 void _throw_exception(char *name, char *message, const char *filename, const int linenum) {
 	struct condition *cond = create_condition(name, message, filename, linenum);
+	struct condition_finalizer cond_finalizer = INIT_STATIC_FINALIZER(condition_finalizer, cond);
+	register_finalizer(&cond_finalizer);
+
 	// search for a handler:
 	struct handler_entry *canidate = handlers;
 	enum handler_result result;
@@ -206,11 +214,11 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
 		case HANDLER_ABORT:
+			// the condition finalizer is ran here, so no need to destroy it.
 			run_finalizers_and_unwind(canidate);
-			destroy_condition(cond);
 			longjmp(canidate->handler->buf, 1);
 		case HANDLER_HANDLED:
-			destroy_condition(cond);
+		    unregister_finalizer(&cond_finalizer)
 			return;
 		case HANDLER_PASS:
 			// skip this handler:
