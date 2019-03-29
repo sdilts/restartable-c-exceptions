@@ -3,7 +3,7 @@
 #include  <exceptions.h>
 
 struct func_data {
-	volatile int *a;
+	volatile int *const a;
 };
 
 enum handler_result handle_something(struct condition *cond, const void *context) {
