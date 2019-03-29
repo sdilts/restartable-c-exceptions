@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <threads.h>
 
 #include <exceptions.h>
 
@@ -22,9 +23,9 @@ struct restart_entry {
 	struct restart_entry *next;
 };
 
-struct handler_entry *handlers = NULL;
-struct restart_entry *restarts = NULL;
+static thread_local struct handler_entry *handlers = NULL;
 
+static thread_local struct restart_entry *restarts = NULL;
 static struct condition *create_condition(char* name, char *message,
 										const char *filename, const int linenum) {
 	struct condition *condition = malloc(sizeof(struct condition));
