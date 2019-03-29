@@ -34,25 +34,34 @@ static thread_local struct handler_entry *handlers = NULL;
  **/
 static thread_local struct restart_entry *restarts = NULL;
 
+
+struct private_cond  {
+	char *name;
+	char *message;
+	int linenum;
+	char *filename;
+};
+
 static struct condition *create_condition(char* name, char *message,
 										const char *filename, const int linenum) {
-	struct condition *condition = malloc(sizeof(struct condition));
+	struct private_cond *condition = malloc(sizeof(struct private_cond));
 	condition->name = malloc(strlen(name)+1);
 	condition->message = malloc(strlen(message)+1);
 	condition->filename = malloc(strlen(filename)+1);
-	strcpy(*(char **)&condition->name, name);
-	strcpy(*(char **)&condition->message, message);
+	strcpy(condition->name, name);
+	strcpy(condition->message, message);
 	// we might not need to do this, as filename /should/ be a static string
-	strcpy(*(char **)&condition->filename, filename);
+	strcpy(condition->filename, filename);
 	//condition->filename = (char *) filename;
-	*(int *)&condition->linenum = linenum;
-	return condition;
+	condition->linenum = linenum;
+	return (struct condition *)condition;
 }
 
 void destroy_condition(struct condition *condition) {
-	free((char *)condition->name);
-	free((char *)condition->message);
-	free((char *)condition->filename);
+	struct private_cond *cond = (struct private_cond *)condition;
+	free(cond->name);
+	free(cond->message);
+	free(cond->filename);
 	free(condition);
 }
 
@@ -218,7 +227,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 			run_finalizers_and_unwind(canidate);
 			longjmp(canidate->handler->buf, 1);
 		case HANDLER_HANDLED:
-		    unregister_finalizer(&cond_finalizer)
+		    unregister_finalizer(&cond_finalizer);
 			return;
 		case HANDLER_PASS:
 			// skip this handler:

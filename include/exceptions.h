@@ -43,9 +43,9 @@ typedef enum handler_result (*handler_func)(struct condition* cond, const void *
 typedef void (*finalizer_func)(const void *data);
 
 struct condition_restart {
-	const char* restart_name;
+	const char *restart_name;
 	const restart_func func;
-	const void *data;
+	void *const data;
 };
 
 struct condition_handler {
@@ -53,12 +53,12 @@ struct condition_handler {
 	const char *condition_name;
 	const handler_func func;
 	jmp_buf buf;
-	const void *data;
+	void *const data;
 };
 
 struct condition_finalizer {
 	const finalizer_func func;
-	void *data;
+	void *const data;
 };
 
 #define INIT_STATIC_RESTART(name, function, _data) \
@@ -72,10 +72,6 @@ void unregister_restart(struct condition_restart *restart);
 #define INIT_STATIC_HANDLER(to_handle, function, _data)	\
 	{ .condition_name = to_handle, .func = function, .data = _data }
 
-// register the given condition handler. If the handler decides to
-// return RESULT_ABORT, return true and set the signaled pointer to the
-// condtition that caused the abort. If a condition is given, it must
-// be freed with destroy_condition().
 void _register_handler(struct condition_handler *handler);
 
 #define REGISTER_HANDLER(handler)	\
