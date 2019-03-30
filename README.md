@@ -67,7 +67,7 @@ The `data` pointer will be explained in the next section.
 To establish the try/catch blocks, we need to establish a
 `condition_handler` struct, then register it with the condition
 machinery. To make this more succinct, two macros are provided:
-'INIT_STATIC_HANDLER` and `REGISTER_HANDLER`. `INIT_STATIC_HANDLER` is
+`INIT_STATIC_HANDLER` and `REGISTER_HANDLER`. `INIT_STATIC_HANDLER` is
 just some syntax sugar to initialize a `condition_handler` struct,
 while the `REGISTER_HANDLER` macro establishes the
 `except Error: ...` portion of our code. Here's the first portion:
