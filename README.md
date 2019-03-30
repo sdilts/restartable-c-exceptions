@@ -67,7 +67,7 @@ The `data` pointer will be explained in the next section.
 To establish the try/catch blocks, we need to establish a
 `condition_handler` struct, then register it with the condition
 machinery. To make this more succinct, two macros are provided:
-'INIT_STATIC_HANDLER` and `REGISTER_HANDLER`. `INIT_STATIC_HANDLER` is
+`INIT_STATIC_HANDLER` and `REGISTER_HANDLER`. `INIT_STATIC_HANDLER` is
 just some syntax sugar to initialize a `condition_handler` struct,
 while the `REGISTER_HANDLER` macro establishes the
 `except Error: ...` portion of our code. Here's the first portion:
@@ -84,6 +84,8 @@ the code will be included:
 	// except block:
 	REGISTER_HANDLER(&aborter) {
 		printf("An error occurred");
+		print_condition(aborter.condition);
+		destroy_condition(aborter.condition);
 		goto handler_scope;
 	}
 	// try block:
@@ -169,7 +171,7 @@ is the last argument to the macro.
 
 If the handler function decides that it cannot make a decision to
 unwind the stack, it can return `HANDLER_PASS` to tell the machinery
-to find another error handler. Similarly, if no action further action needs to be
+to find another error handler. Similarly, if no further action needs to be
 taken, then it can return `HANDLER_HANDLED` to return control to where
 the condition was signaled.
 
@@ -198,7 +200,7 @@ one. Note that this function can return 3 possible values:
 
 ## Other uses for the condition system
 
-'HANDLER_HANDLED' and 'HANDLER_PASS' have interesting applications
+`HANDLER_HANDLED` and `HANDLER_PASS` have interesting applications
 beyond error handling. While other more direct mechanisms exist, they
 can be used for logging or notifying higher level code when certain
 events occur. Whether or not this is a good idea is up to the
