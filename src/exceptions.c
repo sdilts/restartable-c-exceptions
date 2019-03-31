@@ -184,7 +184,7 @@ void register_finalizer(struct condition_finalizer *finalizer) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
 	if(!entry) {
 		fprintf(stderr, "Unable allocate handler entry\n");
-		exit((1);
+		exit(1);
 	}
 	entry->tag = FINALIZER;
 	entry->finalizer = finalizer;
