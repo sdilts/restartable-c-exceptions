@@ -46,22 +46,22 @@ static struct condition *create_condition(char* name, char *message,
 										const char *filename, const int linenum) {
 	struct private_cond *condition = malloc(sizeof(struct private_cond));
 	if(!condition) {
-		fprintf(stderr, "Unable to allocate condition\n");
+		fputs("Unable to allocate condition\n", stderr);
 		exit(1);
 	}
 	condition->name = malloc(strlen(name)+1);
 	if(!condition->name) {
-		fprintf(stderr, "Unable to allocate condition\n");
+		fputs("Unable to allocate condition\n", stderr);
 		exit(1);
 	}
 	condition->message = malloc(strlen(message)+1);
 	if(!condition->message) {
-		fprintf(stderr, "Unable to allocate condition\n");
+		fputs("Unable to allocate condition\n", stderr);
 		exit(1);
 	}
 	condition->filename = malloc(strlen(filename)+1);
 	if(!condition->filename) {
-		fprintf(stderr, "Unable to allocate condition\n");
+		fputs("Unable to allocate condition\n", stderr);
 		exit(1);
 	}
 
@@ -98,7 +98,7 @@ void print_condition(struct condition *condition) {
 void register_restart(struct condition_restart *restart)  {
 	struct restart_entry *entry = malloc(sizeof(struct restart_entry));
 	if(!entry) {
-		fprintf(stderr, "Unable allocate restart entry\n");
+		fputs("Unable to allocate restart entry\n", stderr);
 		exit(1);
 	}
 	entry->restart = restart;
@@ -123,7 +123,7 @@ void unregister_restart(struct condition_restart *restart) {
 void _register_handler(struct condition_handler *handler) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
 	if(!entry) {
-		fprintf(stderr, "Unable allocate handler entry\n");
+		fputs("Unable allocate handler entry\n", stderr);
 		exit(1);
 	}
 	entry->tag = HANDLER;
@@ -143,7 +143,7 @@ void unregister_handler(struct condition_handler *handler) {
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
-		fprintf(stderr, "Trying to unregister non-existent handler\n");
+		fputs("Trying to unregister non-existent handler\n", stderr);
 	}
 }
 
@@ -204,7 +204,7 @@ static void unregister_finalizer_no_cleanup(struct condition_finalizer *finalize
 		LL_DELETE(handlers, entry);
 		free(entry);
 	} else {
-		fprintf(stderr, "Trying to unregister non-existent finalizer\n");
+		fputs("Trying to unregister non-existent finalizer\n", stderr);
 	}
 }
 
@@ -280,7 +280,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		}
 	}
 	// if we get here, it means we didn't find a handler:
-	fprintf(stderr, "Fatal condition: ");
+	fputs("Fatal condition: ", stderr);
 	fprint_condition(stderr, cond);
 	exit(1);
 }
