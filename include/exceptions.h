@@ -18,7 +18,10 @@ enum handler_result {
 };
 
 enum restart_result {
+	// the restart did what needed to be done, and control should
+	// return to where the error was generated.
 	RESTART_SUCCEED,
+	// the restart was unable to perform the desired action.
 	RESTART_FAIL,
 	RESTART_NOT_FOUND
 };
@@ -35,6 +38,9 @@ void fprint_condition(FILE *stream, struct condition *condition);
 void print_condition(struct condition *condition);
 
 void destroy_condition(struct condition *condition);
+
+// for these functions, the data pointer corresponds to the void *data pointer in the
+// respective structures:
 
 typedef enum restart_result (*restart_func)(struct condition* cond, const void *data);
 
@@ -66,35 +72,20 @@ struct condition_finalizer {
 	void *const data;
 };
 
+// syntax sugar for initializing the restart, condition, and handler structs:
 #define INIT_STATIC_RESTART(name, function, _data) \
 	{ .restart_name = name, .func = function, .data = data }
+
+#define INIT_STATIC_HANDLER(to_handle, function, _data)	\
+	{ .condition_name = to_handle, .func = function, .data = _data }
+
+#define INIT_STATIC_FINALIZER(_func, _data) \
+	{ .func = _func, .data = _data }
 
 // adds the given restart as a valid restart:
 void register_restart(struct condition_restart *restart);
 
 void unregister_restart(struct condition_restart *restart);
-
-#define INIT_STATIC_HANDLER(to_handle, function, _data)	\
-	{ .condition_name = to_handle, .func = function, .data = _data }
-
-void _register_handler(struct condition_handler *handler);
-
-#define REGISTER_HANDLER(handler)	\
-	_register_handler(handler);		\
-		if(setjmp((handler)->buf))
-
-void unregister_handler(struct condition_handler *handler);
-
-// If a a condition with name condtion_name is signaled, handle it with the given restart:
-enum restart_result invoke_restart(struct condition *cond, char *restart_name);
-
-void _throw_exception(char* name, char *message, const char *filename, const int linenum);
-
-#define throw(name, message) \
-	_throw_exception(name, message, __FILE__, __LINE__)
-
-#define warn(message) \
-	_throw_exception("warning", message, __FILE__, __LINE__)
 
 /**
  * A finalizer will always be run, even when the function is exited via a condition.
@@ -104,7 +95,23 @@ void register_finalizer(struct condition_finalizer *finalizer);
 
 void unregister_finalizer(struct condition_finalizer *finalizer);
 
-#define INIT_STATIC_FINALIZER(_func, _data) \
-	{ .func = _func, .data = _data }
+void _register_handler(struct condition_handler *handler);
+
+// Register the handler and establish where the handler jumps to:
+#define REGISTER_HANDLER(handler)	\
+	_register_handler(handler);		\
+		if(setjmp((handler)->buf))
+
+void unregister_handler(struct condition_handler *handler);
+
+enum restart_result invoke_restart(struct condition *cond, char *restart_name);
+
+void _throw_exception(char* name, char *message, const char *filename, const int linenum);
+
+#define throw(name, message) \
+	_throw_exception(name, message, __FILE__, __LINE__)
+
+#define warn(message) \
+	_throw_exception("warning", message, __FILE__, __LINE__)
 
 #endif
