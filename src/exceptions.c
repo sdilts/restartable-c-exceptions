@@ -166,6 +166,9 @@ enum restart_result invoke_restart(struct condition *cond, char *restart_name) {
 	}
 }
 
+/**
+ * Find the next handler in the given handler_entry list with condition name condition_name
+ **/
 static struct handler_entry *find_handler_entry(struct handler_entry *head, char *condition_name) {
 	struct handler_entry *entry = head;
 	for( ; entry != NULL; entry = entry->next) {
@@ -183,7 +186,7 @@ static struct handler_entry *find_handler_entry(struct handler_entry *head, char
 void register_finalizer(struct condition_finalizer *finalizer) {
 	struct handler_entry *entry = malloc(sizeof(struct handler_entry));
 	if(!entry) {
-		fprintf(stderr, "Unable allocate handler entry\n");
+		fputs("Unable allocate handler entry\n", stderr);
 		exit(1);
 	}
 	entry->tag = FINALIZER;
@@ -261,7 +264,7 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 		result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
 		case HANDLER_ABORT:
-			// setup the context for the handler:
+			// don't run the finalizer so the condition can be passed to the handler:
 			unregister_finalizer_no_cleanup(&cond_finalizer);
 			canidate->handler->condition = cond;
 			// unwind the stack and run the finalizers:
