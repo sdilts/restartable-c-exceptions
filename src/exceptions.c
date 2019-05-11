@@ -254,14 +254,10 @@ void _throw_exception(char *name, char *message, const char *filename, const int
 
 	// search for a handler:
 	struct handler_entry *canidate = handlers;
-	enum handler_result result;
-	while(canidate != NULL) {
-		// find the next valid handler in the list:
-		canidate = find_handler_entry(canidate, name);
-		if (canidate == NULL) {
-			break; // while
-		}
-		result = canidate->handler->func(cond, canidate->handler->data);
+
+	canidate = find_handler_entry(canidate, name);
+	for( ; canidate != NULL; canidate = find_handler_entry(canidate, name)) {
+		enum handler_result result = canidate->handler->func(cond, canidate->handler->data);
 		switch(result) {
 		case HANDLER_ABORT:
 			// don't run the finalizer so the condition can be passed to the handler:
