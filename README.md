@@ -35,7 +35,7 @@ Because `setjmp`/`longjmp` are being used, variable-modified types
 like VLAs will cause undefined behavior and memory leaks.
 
 ## Usage
-A complete description of each function and macro is available in
+A complete description of each function and macro is available in the
 `include/exceptions.h` file.
 
 ### Non local exits
